@@ -8,5 +8,5 @@ channel = "stable-24_05"
 run = ["sh", "-c", "npm run start --prefix backend"]
 
 [[ports]]
-localPort = 34387
+localPort = 34273
 externalPort = 80
