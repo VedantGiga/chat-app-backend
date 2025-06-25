@@ -3,7 +3,7 @@ services:
     name: chat-app
     env: node
     plan: free
-    buildCommand: npm install && cd frontend && npm install && npm run build && cd .. && cd backend && npm install
+    buildCommand: npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -18,8 +18,3 @@ services:
         value: "189523277583391"
       - key: CLOUDINARY_API_SECRET
         value: KywGbUAykxOphTDwooRCUgspX-0
-      - key: CLIENT_URL
-        fromService:
-          type: web
-          name: chat-app
-          property: host
