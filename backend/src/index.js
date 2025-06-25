@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import path from 'path'
+import fs from 'fs'
 import authRoutes from './routes/auth.route.js'
 import messageRoutes from './routes/message.route.js'
 import { connectDB } from './lib/db.js'
@@ -26,15 +27,19 @@ app.use('/api/auth',authRoutes)
 app.use('/api/messages',messageRoutes)
 
 if(process.env.NODE_ENV==="production"){
-    app.use(express.static(path.join(__dirname, "../../frontend/dist")))
+    const frontendPath = path.join(__dirname, "../../frontend/dist")
+    const indexPath = path.join(frontendPath, "index.html")
     
-    app.get("*", (req,res) => {
-        try {
-            res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"))
-        } catch (error) {
-            res.json({message: "Chat App API is running", status: "success"})
-        }
-    })
+    if(fs.existsSync(indexPath)) {
+        app.use(express.static(frontendPath))
+        app.get("*", (req,res) => {
+            res.sendFile(indexPath)
+        })
+    } else {
+        app.get("*", (req,res) => {
+            res.json({message: "Chat App API is running - Frontend not built", status: "success", api: "working"})
+        })
+    }
 } else {
     app.get("/", (req,res) => {
         res.json({message: "Chat App API is running", status: "success"})
