@@ -7,7 +7,7 @@ const server = http.createServer(app)
 
 const io = new Server(server, {
     cors:{
-        origin:["http://localhost:5173"]
+        origin: process.env.NODE_ENV === "production" ? process.env.CLIENT_URL : ["http://localhost:5173"]
     }
 })
 
@@ -25,11 +25,21 @@ io.on("connection", (socket) => {
 
     // io.emit() is used to send events to all the connected clients
     io.emit("getOnlineUsers",Object.keys(userSocketMap))
+    // Handle typing status
+    socket.on("typing", (data) => {
+        const receiverSocketId = getReceiverSocketId(data.receiverId)
+        if(receiverSocketId) {
+            socket.to(receiverSocketId).emit("userTyping", {
+                senderId: userId,
+                isTyping: data.isTyping
+            })
+        }
+    })
+
     socket.on("disconnect", () => {
         console.log("A user disconnected",socket.id);
         delete userSocketMap[userId]
-    io.emit("getOnlineUsers",Object.keys(userSocketMap))
-
+        io.emit("getOnlineUsers",Object.keys(userSocketMap))
     })
 })
 

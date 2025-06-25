@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: chat-app
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        value: mongodb+srv://vedantvyas79:vedant@cluster0.mzuadqc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CLOUDINARY_CLOUD_NAME
+        value: dvygl2rgf
+      - key: CLOUDINARY_API_KEY
+        value: "189523277583391"
+      - key: CLOUDINARY_API_SECRET
+        value: KywGbUAykxOphTDwooRCUgspX-0
+      - key: CLIENT_URL
+        fromService:
+          type: web
+          name: chat-app
+          property: host
