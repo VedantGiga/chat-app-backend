@@ -21,28 +21,64 @@ app.use(cors({
     origin: process.env.NODE_ENV === "production" ? true : "http://localhost:5173",
     credentials: true,
     methods: ["GET","POST","PUT","DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 }))
 
 app.use('/api/auth',authRoutes)
 app.use('/api/messages',messageRoutes)
 
 if(process.env.NODE_ENV==="production"){
-    const frontendPath = path.join(__dirname, "../../frontend/dist")
-    const indexPath = path.join(frontendPath, "index.html")
+    // Try multiple paths for frontend dist
+    const possiblePaths = [
+        path.join(__dirname, "../../frontend/dist"),
+        path.join(__dirname, "../frontend/dist"),
+        path.join(__dirname, "../dist"),
+        path.join(process.cwd(), "frontend/dist"),
+        path.join(process.cwd(), "../frontend/dist")
+    ]
     
-    if(fs.existsSync(indexPath)) {
-        app.use(express.static(frontendPath))
+    let frontendPath = null
+    let indexPath = null
+    
+    for(const testPath of possiblePaths) {
+        const testIndex = path.join(testPath, "index.html")
+        console.log(`Testing path: ${testPath} - exists: ${fs.existsSync(testIndex)}`)
+        if(fs.existsSync(testIndex)) {
+            frontendPath = testPath
+            indexPath = testIndex
+            break
+        }
+    }
+    
+    if(frontendPath && indexPath) {
+        // Serve static files with proper headers
+        app.use(express.static(frontendPath, {
+            maxAge: '1d',
+            etag: false
+        }))
+        
+        // Handle SPA routing - serve index.html for all non-API routes
         app.get("*", (req,res) => {
+            if(req.path.startsWith('/api/')) {
+                return res.status(404).json({error: 'API route not found'})
+            }
             res.sendFile(indexPath)
         })
     } else {
+        console.error("Frontend build not found! Available paths checked:")
+        possiblePaths.forEach(p => console.log(`  - ${p}: ${fs.existsSync(p)}`))
         app.get("*", (req,res) => {
-            res.json({message: "Chat App API is running - Frontend not built", status: "success", api: "working"})
+            res.json({
+                message: "Chat App API is running - Frontend not built", 
+                status: "success", 
+                api: "working",
+                paths_checked: possiblePaths.map(p => ({path: p, exists: fs.existsSync(p)}))
+            })
         })
     }
 } else {
     app.get("/", (req,res) => {
-        res.json({message: "Chat App API is running", status: "success"})
+        res.json({message: "Chat App API is running in DEVELOPMENT mode", status: "success", env: process.env.NODE_ENV || 'development'})
     })
 }
 
