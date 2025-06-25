@@ -25,10 +25,21 @@ app.use(cors({
 app.use('/api/auth',authRoutes)
 app.use('/api/messages',messageRoutes)
 
-// API routes only - frontend served separately
-app.get("/", (req,res) => {
-    res.json({message: "Chat App API is running", status: "success"})
-})
+if(process.env.NODE_ENV==="production"){
+    app.use(express.static(path.join(__dirname, "../../frontend/dist")))
+    
+    app.get("*", (req,res) => {
+        try {
+            res.sendFile(path.join(__dirname, "../../frontend/dist/index.html"))
+        } catch (error) {
+            res.json({message: "Chat App API is running", status: "success"})
+        }
+    })
+} else {
+    app.get("/", (req,res) => {
+        res.json({message: "Chat App API is running", status: "success"})
+    })
+}
 
 server.listen(PORT,() => {
     console.log("Server started on port:"+PORT)
