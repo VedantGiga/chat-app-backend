@@ -3,7 +3,7 @@ services:
     name: chat-app
     env: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install && cd frontend && npm install && npm run build && cd .. && cd backend && npm install
     startCommand: npm start
     envVars:
       - key: NODE_ENV
